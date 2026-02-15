@@ -1,5 +1,5 @@
 CC ?= gcc
-CFLAGS ?= -Wall -Wextra -g -O0
+CFLAGS ?= -Wall -Wextra -pedantic -std=c11 -ggdb -O0 -fsanitize=address 
 
 TARGET := compiler
 SRCDIR := src
@@ -13,7 +13,7 @@ OBJS := $(SRC:$(SRCDIR)/%.c=$(OBJDIR)/%.o)
 all: clean $(TARGET)
 
 $(TARGET): $(OBJS)
-	$(CC) $(OBJS) -o $@
+	$(CC) -fsanitize=address $(OBJS) -o $@ 
 
 $(OBJDIR)/%.o: $(SRCDIR)/%.c | $(OBJDIR)
 	$(CC) $(CFLAGS) -c $< -o $@
@@ -24,4 +24,4 @@ $(OBJDIR):
 
 
 clean: 
-	rm -rf $(OBJDIR) $(TARGET)	
+	rm -rf $(OBJDIR) 

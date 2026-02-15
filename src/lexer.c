@@ -1,4 +1,4 @@
-#include "lexer.h"
+#include "kai.h"
 
 const char* keywords[] = {
     "auto", 
@@ -32,15 +32,7 @@ const char* keywords[] = {
     "unsigned", 
     "void", 
     "volatile", 
-    "while"
-};
-
-const char* identifiers[] = { 
-     NULL,        
-};
-
-const char* numbers[] = { 
-    NULL,
+    "while",
 };
 
 const char* symbols[] = {
@@ -48,7 +40,6 @@ const char* symbols[] = {
     "+", "-", "*", "/", "%",
     "=", "<", ">",
     "{", "}", "(", ")", "[", "]",
-    NULL,
 };
 
 Token* tokenize(const char* file_path) {
@@ -63,18 +54,19 @@ Token* tokenize(const char* file_path) {
     Token* tokens = (Token*)malloc(2000 * sizeof(Token));
     int token_count = 0;
     int c;
-    char* buffer = (char*)malloc(20 * sizeof(char));
+    char* buffer = (char*)malloc(200 * sizeof(char));
     int buffer_count = 0;
     INFO("starting tokenizing");
     while((c = fgetc(rfile)) != EOF) {
         if(isspace(c)) continue;
 
         buffer_count = 0;
-        
+                
         while(c != ' ' && c != '\0')
         { 
             if(isdigit(c)) { 
                 // Number
+                INFO("A number");
                 while(isdigit(c)) {
                     buffer[buffer_count++] = c;
                     c = fgetc(rfile);
@@ -83,7 +75,7 @@ Token* tokenize(const char* file_path) {
                 ungetc(c, rfile);
                 tokens[token_count++] = (Token){
                     .type = TOKEN_NUMBER,
-                    .lexeme = strdup(buffer)
+                    .lexeme = _strdup(buffer)
                 };
                 break;
             }
@@ -96,32 +88,34 @@ Token* tokenize(const char* file_path) {
                 buffer[buffer_count] = '\0';
                 ungetc(c, rfile);
                 int is_keyword = 0;
+                
+                INFO("A keyword");
                 // Keyword
-                for(int i=0; keywords[i]!=NULL; i++) {
+                for(int i=0; i<sizeof(keywords)/sizeof(keywords[0]); i++) {
                     if(strcmp(buffer, keywords[i]) == 0) {
                         tokens[token_count++] = (Token){
                             .type = TOKEN_KEYWORD,
-                            .lexeme = strdup(buffer)
+                            .lexeme = _strdup(buffer)
                         };
                         is_keyword = 1;
                         break;
                     }
                 }
 
+                INFO("An identifier");
                 // Identifier
                 if(is_keyword == 0) { 
                     tokens[token_count++] = (Token){
                         .type = TOKEN_IDENTIFIER,
-                        .lexeme = strdup(buffer)
+                        .lexeme = _strdup(buffer)
                     };
                     break;
                 }
             }
-                
-            // unknown
 
             // Symbol
             else {
+                INFO("A symbol");
                 if(c == '=' || c == '!' || c == '<' || c == '>') {
                     buffer[buffer_count++] = c;
                     c = fgetc(rfile);
@@ -138,7 +132,7 @@ Token* tokenize(const char* file_path) {
                 ungetc(c, rfile);
                 tokens[token_count++] = (Token){
                     .type = TOKEN_SYMBOL, 
-                    .lexeme = strdup(buffer)
+                    .lexeme = _strdup(buffer)
                 };
                 break;
             }
@@ -146,6 +140,7 @@ Token* tokenize(const char* file_path) {
     }
     fclose(rfile);
     tokens[token_count] = (Token){TOKEN_UNKNOWN, NULL};
+    INFO("Finished tokenizing");
     return tokens;
 }
 

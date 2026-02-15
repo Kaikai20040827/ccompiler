@@ -1,4 +1,4 @@
-#include "ir.h"
+#include "kai.h"
 
 IRArray glob_ira;
 IRArray* ira = &glob_ira;
@@ -28,7 +28,7 @@ void IR_array_pushback(IRArray* ira, IR ir) {
 void emit(IROp op, const char* name, int value) {
     IR ir = (IR) {
         .op = op,
-        .name = name,
+        .name = name ? _strdup(name) : NULL,
         .value = value
     };
 
@@ -37,40 +37,52 @@ void emit(IROp op, const char* name, int value) {
 
 int gen_return_expr(ASTNode* node) {
     switch (node->type) {
-        case AST_NUMBER:
-            return node->value;
+        case AST_RETURN:
+            node = node->child;
+            return atoi(node->value);
+        default:
+            FATAL("Unknown ASTType");
     }
 }
 
-IR* ir_codegen(ASTNode* node) {
-    if(!node) return NULL;
+void ir_codegen(ASTNode* node) {
+    if(!node) return;
 
     switch(node->type) {
+        case AST_FUNCTION:
+            printf("Function\n");
+            ir_codegen(node->child);
+            break;
         case AST_RETURN:
-            int ret_expr = gen_return_expr(node->child);
+            printf("Return\n");
+            int ret_expr = gen_return_expr(node);
             emit(IR_RETURN, NULL, ret_expr);
-
+            break;
         default:
             emit(IR_UNKNOWN, NULL, 0);
             break;
     }
-    return ira->data;
 }
 
 void dump_ira(IRArray* ira) {
-    FILE* fasm = fopen("main.s", "w");
+    remove("main.asm");
+    FILE* fasm = fopen("main.asm", "w");
 
-    if(!ira || !fasm) return;
+    if(!ira)
+        FATAL("The IR array doesn't exist");
+    if(!fasm)
+        FATAL("The assembly file doesn't exist");
+    fprintf(fasm, ".globa\n");
+    fprintf(fasm, "section .text\n");
+    fprintf(fasm, "_start:\n");
 
-    fprintf(fasm, "global main\n");
-    fprintf(fasm, "main:\n");
-    
     for(int i=0; i<ira->size; i++) {
         IR ir = ira->data[i];
         switch(ir.op) {
                 case IR_RETURN:
-                fprintf(fasm, "  mov rax, 0\n");
-                fprintf(fasm, "  ret\n");
+                fprintf(fasm, "  mov rax, %d\n", 60);
+                fprintf(fasm, "  xor rdi, rdi\n");
+                fprintf(fasm, "  syscall\n");
                 break;
             default:
                 fprintf(fasm, "  ; unknown IR\n");

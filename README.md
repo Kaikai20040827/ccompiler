@@ -1,7 +1,9 @@
 ## intro
 
 Token format:
+```
 {TokenType:"...", value:"...", line:..., column:...}
+```
 expl:
 {TokenType:"TOKEN_KEYWORD", value:"main", line:1, column:5}
 

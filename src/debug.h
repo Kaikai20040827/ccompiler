@@ -7,19 +7,30 @@
 #define COLOR_RESET     "\033[0m"
 #define COLOR_GREEN     "\033[32m"
 #define COLOR_PURPLE    "\033[35m"
-#define COLOR_RED       "\033[31m"
-#define COLOR_DARK_RED  "\033[91m"
+#define COLOR_RED       "\033[91m"
+#define COLOR_DARK_RED  "\033[31m"
 
-#define EMOJI_INFO      "\u2139\uFE0F"  // ℹ️ Checkmark for "info"
-#define EMOJI_WARNING   "\u26A0\uFE0F"  // ⚠️ Exclamation mark for "warning"
-#define EMOJI_ERROR     "\u274C"        // ❌Clash for "error"
-#define EMOJI_FATAL     "\U0001F4A5"    // 💥Explosion "fatal"
+#define EMOJI_INFO      "ℹ️ "
+#define EMOJI_WARNING   "⚠️ "
+#define EMOJI_ERROR     "❌"
+#define EMOJI_FATAL     "💥"
+#define EMOJI_OK        "✅"
+#define EMOJI_DEBUG     "🐛"
+#define EMOJI_LEXER     "🔤"
+#define EMOJI_PARSER    "🧩"
+#define EMOJI_AST       "🌳"
+#define EMOJI_IR        "🧠"
+#define EMOJI_CODEGEN   "⚙️ "
+#define EMOJI_LINKER    "🔗"
+#define EMOJI_RUN       "🚀"
+#define EMOJI_DEVIL     "😈"
+#define EMOJI_ALERT     "🚨"
 
 typedef enum {
-    INFO,
-    WARNING,
-    ERROR,
-    FATAL,
+    DBG_INFO,
+    DBG_WARNING,
+    DBG_ERROR,
+    DBG_FATAL,
 
 } DebugLevel; 
 
@@ -30,24 +41,32 @@ typedef enum {
     LEXEME_ERR
 } ErrorType; // Only for throwing and processing error
 
-#define INFO(x) \
+#define INFO(...) \
     do{\
-        printf("%s  %sinfo%s: %s\n", EMOJI_INFO, COLOR_GREEN, COLOR_RESET, x);\
+        fprintf(stdout, EMOJI_OK EMOJI_INFO" "COLOR_GREEN"info"COLOR_RESET": ");\
+        fprintf(stdout, __VA_ARGS__);\
+        fprintf(stdout, "\n");\
     } while(0)
 
-#define WARNING(x) \
+#define WARNING(...) \
     do{\
-        printf("%s  %s %s:%d%s warning%s: %s\n", EMOJI_WARNING, __func__, __FILE__, __LINE__, COLOR_PURPLE, COLOR_RESET, x);\
+        fprintf(stderr, EMOJI_DEVIL EMOJI_WARNING " in \"%s\" %s:%d" COLOR_PURPLE " warning" COLOR_RESET ": ", __func__, __FILE__, __LINE__);\
+        fprintf(stderr, __VA_ARGS__);\
+        fprintf(stderr, "\n");\
     } while(0)
 
-#define ERROR(x) \
+#define ERROR(...) \
     do{\
-        printf("%s in \"%s\" %s:%d%s error%s: %s\n", EMOJI_ERROR, __func__, __FILE__, __LINE__, COLOR_RED, COLOR_RESET, x);\
+        fprintf(stderr, EMOJI_ERROR EMOJI_DEBUG" in \"%s\" %s:%d"COLOR_RED" error"COLOR_RESET": ", __func__, __FILE__, __LINE__);\
+        fprintf(stderr, __VA_ARGS__);\
+        fprintf(stderr, "\n");\
     } while(0)
 
-#define FATAL(x) \
+#define FATAL(...) \
     do{\
-        printf("%s in \"%s\" %s:%d%s fatal%s: %s\n", EMOJI_FATAL, __func__, __FILE__, __LINE__, COLOR_DARK_RED, COLOR_RESET, x);\
+        fprintf(stderr, EMOJI_ALERT EMOJI_FATAL " in \"%s\" %s:%d"COLOR_DARK_RED" fatal"COLOR_RESET": ",__func__, __FILE__, __LINE__);\
+        fprintf(stderr, __VA_ARGS__);\
+        fprintf(stderr, "\n");\
         exit(EXIT_FAILURE);\
     } while(0)
 
@@ -60,12 +79,12 @@ typedef struct {
 } MemInfo;
 
 void* mem_new(size_t t);
-void mem_del(void *x);
+void mem_del(void *x, const char* file, int line);
 
 #define memnew(size) mem_new(size);
 
 #define memdel(ptr) do {\
-        mem_del(ptr);\
+        mem_del(ptr, __FILE__, __LINE__);\
         (ptr) = NULL;\
     } while(0)
 
